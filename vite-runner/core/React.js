@@ -1,4 +1,5 @@
 
+const TEXT_ELEMENT = 'TEXT_ELEMENT'
 
 function createElement(type, props, ...children) {
   return {
@@ -6,7 +7,8 @@ function createElement(type, props, ...children) {
     props: {
       ...props,
       children: children.map(item => {
-        return typeof item === 'string' ? createTextNode(item) : item;
+        const isTextNode = typeof item === 'string' || typeof item === 'number';
+        return isTextNode ? createTextNode(item) : item;
       })
     }
   }
@@ -14,7 +16,7 @@ function createElement(type, props, ...children) {
 
 function createTextNode(text) {
   return {
-    type: 'TEXT_ELEMENT',
+    type: TEXT_ELEMENT,
     props: {
       nodeValue: text,
       children: []
@@ -33,8 +35,7 @@ function render(el, container) {
 }
 
 function createDom(type) {
-  return type === 'TEXT_ELEMENT' ?
-    document.createTextNode('') : document.createElement(type)
+  return type === TEXT_ELEMENT ? document.createTextNode('') : document.createElement(type)
 }
 
 function updateProps(dom, props) {
@@ -45,8 +46,7 @@ function updateProps(dom, props) {
   })
 }
 
-function initChildren(fiber) {
-  const children = fiber.props.children
+function initChildren(fiber, children) {
   let prevChild = null
 
   children.forEach((child, index) => {
@@ -67,23 +67,42 @@ function initChildren(fiber) {
   })
 }
 
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)]
+  initChildren(fiber, children)
+}
 
-function performWorkOfUnit(fiber) {
+function updateHostComponent(fiber) {
   if (!fiber.dom) {
+    // 判断type 是否是函数
     const dom = (fiber.dom = createDom(fiber.type))
     updateProps(dom, fiber.props)
   }
 
+  const children = fiber.props.children
+  initChildren(fiber, children)
+}
 
-  initChildren(fiber)
+function performWorkOfUnit(fiber) {
+  const isFunctionComponent = typeof fiber.type === 'function'
+
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber)
+  } else {
+    updateHostComponent(fiber)
+  }
+
 
   if (fiber.child) {
     return fiber.child
   }
-  if (fiber.sibling) {
-    return fiber.sibling
+
+  // 解决多个组件渲染的问题
+  let nextFiber = fiber
+  while (nextFiber) {
+    if (nextFiber.sibling) return nextFiber.sibling
+    nextFiber = nextFiber.parent
   }
-  return fiber.parent?.sibling
 
 }
 let root = null
@@ -113,7 +132,15 @@ function commitRoot() {
 
 function commitFiber(fiber) {
   if (!fiber) return
-  fiber.parent.dom.append(fiber.dom)
+  let fiberParent = fiber.parent
+
+  while (!fiberParent.dom) {
+    fiberParent = fiberParent.parent
+  }
+
+  if (fiber.dom) {
+    fiberParent.dom.append(fiber.dom)
+  }
   commitFiber(fiber.child)
   commitFiber(fiber.sibling)
 }
