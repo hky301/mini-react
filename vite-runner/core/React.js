@@ -25,8 +25,11 @@ function createTextNode(text) {
 function render(el, container) {
   nextWorkOfUnit = {
     dom: container,
-    children: [el]
+    props: {
+      children: [el]
+    }
   }
+  root = nextWorkOfUnit
 }
 
 function createDom(type) {
@@ -68,7 +71,6 @@ function initChildren(fiber) {
 function performWorkOfUnit(fiber) {
   if (!fiber.dom) {
     const dom = (fiber.dom = createDom(fiber.type))
-    fiber.parent.dom.append(dom)
     updateProps(dom, fiber.props)
   }
 
@@ -84,7 +86,7 @@ function performWorkOfUnit(fiber) {
   return fiber.parent?.sibling
 
 }
-
+let root = null
 let nextWorkOfUnit = null
 function workLoop(idleDeadline) {
   let shouldYield = false
@@ -94,11 +96,27 @@ function workLoop(idleDeadline) {
     shouldYield = idleDeadline.timeRemaining() < 1
   }
 
+  if (!nextWorkOfUnit && root) {
+    // 链表处理完了
+    commitRoot()
+  }
+
   requestIdleCallback(workLoop)
 }
 
 requestIdleCallback(workLoop)
 
+function commitRoot() {
+  commitFiber(root.child)
+  root = null
+}
+
+function commitFiber(fiber) {
+  if (!fiber) return
+  fiber.parent.dom.append(fiber.dom)
+  commitFiber(fiber.child)
+  commitFiber(fiber.sibling)
+}
 
 const React = {
   render,
