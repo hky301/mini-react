@@ -44,50 +44,50 @@ function updateProps(dom, props) {
   })
 }
 
-function initChildren(work) {
-  const children = work.props.children
+function initChildren(fiber) {
+  const children = fiber.props.children
   let prevChild = null
   children.forEach((child, index) => {
 
-    const nextWork = {
+    const nextFiber = {
       type: child.type,
       props: child.props,
       child: null,
       sibling: null,
-      parent: work,
+      parent: fiber,
       dom: null
     }
 
     if (index === 0) {
-      work.child = nextWork
+      fiber.child = nextFiber
     } else {
-      prevChild.sibling = nextWork
+      prevChild.sibling = nextFiber
     }
-    prevChild = nextWork
+    prevChild = nextFiber
   })
 }
 
 
 let nextWorkOfUnit = null
-function performWorkOfUnit(work) {
-  if (!work.dom) {
-    const dom = work.dom = createDom(work.type)
-    work.parent.dom.append(dom)
+function performWorkOfUnit(fiber) {
+  if (!fiber.dom) {
+    const dom = fiber.dom = createDom(fiber.type)
+    fiber.parent.dom.append(dom)
 
-    updateProps(dom, work.props)
+    updateProps(dom, fiber.props)
   }
 
-  initChildren(work)
+  initChildren(fiber)
 
-  if (work.child) {
-    return work.child
+  if (fiber.child) {
+    return fiber.child
   }
 
-  if (work.sibling) {
-    return work.sibling
+  if (fiber.sibling) {
+    return fiber.sibling
   }
 
-  return work.parent?.sibling
+  return fiber.parent?.sibling
 
 }
 
