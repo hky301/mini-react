@@ -18,7 +18,10 @@ api 和 react 保持一致
 用 vite 创建项目，支持 jsx
 
 3. 实现任务调度器
+dom 非常大时，浏览器会卡顿
+
 4. 实现 fiber 架构
+
 5. 实现统一提交
 6. 实现 function component
 7. 重构 function component
