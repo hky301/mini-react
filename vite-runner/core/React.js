@@ -6,7 +6,8 @@ function createElement(type, props, ...children) {
     props: {
       ...props,
       children: children.map(child => {
-        return typeof child === 'string' ? createTextVNode(child) : child
+        const isTextNode = typeof child === 'string' || typeof child === 'number'
+        return isTextNode ? createTextVNode(child) : child
       })
     }
   }
@@ -30,6 +31,7 @@ function render(vnode, container) {
       children: [vnode]
     }
   }
+  root = nextWorkOfUnit
 }
 
 function createDom(type) {
@@ -44,8 +46,7 @@ function updateProps(dom, props) {
   })
 }
 
-function initChildren(fiber) {
-  const children = fiber.props.children
+function initChildren(fiber, children) {
   let prevChild = null
   children.forEach((child, index) => {
 
@@ -67,27 +68,43 @@ function initChildren(fiber) {
   })
 }
 
-
+let root = null
 let nextWorkOfUnit = null
-function performWorkOfUnit(fiber) {
+
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)]
+  initChildren(fiber, children)
+}
+
+function updateHostComponent(fiber) {
   if (!fiber.dom) {
     const dom = fiber.dom = createDom(fiber.type)
-    fiber.parent.dom.append(dom)
 
     updateProps(dom, fiber.props)
   }
+  const children = fiber.props.children
+  initChildren(fiber, children)
+}
 
-  initChildren(fiber)
+function performWorkOfUnit(fiber) {
+  const isFunctionComponent = typeof fiber.type === 'function'
+  if (!isFunctionComponent) {
+    updateHostComponent(fiber)
+  } else {
+    updateFunctionComponent(fiber)
+  }
 
   if (fiber.child) {
     return fiber.child
   }
 
-  if (fiber.sibling) {
-    return fiber.sibling
-  }
+  // 找下一个要处理的节点
+  let nextFiber = fiber
+  while (nextFiber) {
+    if (nextFiber.sibling) return nextFiber.sibling
 
-  return fiber.parent?.sibling
+    nextFiber = nextFiber.parent
+  }
 
 }
 
@@ -102,8 +119,37 @@ function workLoop(deadline) {
 
     shouldYield = deadline.timeRemaining() < 1
   }
+
+  // 没有 nextWorkOfUnit 时,拿到root节点进行统一渲染到屏幕上
+  if (!nextWorkOfUnit && root) {
+    console.log(root);
+    commitRoot()
+  }
+
+
   requestIdleCallback(workLoop)
 }
+
+
+function commitRoot() {
+  commitWork(root.child)
+  root = null
+}
+
+function commitWork(fiber) {
+  if (!fiber) return
+  let parentFiber = fiber.parent
+
+  while (!parentFiber.dom) {
+    parentFiber = parentFiber.parent
+  }
+  if (fiber.dom) {
+    parentFiber.dom.append(fiber.dom)
+  }
+  commitWork(fiber.child)
+  commitWork(fiber.sibling)
+}
+
 
 requestIdleCallback(workLoop)
 
