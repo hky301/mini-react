@@ -67,8 +67,8 @@ function updateProps(dom, newProps, oldProps) {
       if (newProps[key] !== oldProps[key]) {
         if (key.startsWith('on')) {
           const eventType = key.slice(2).toLowerCase()
-          document.removeEventListener(eventType, oldProps[key])
-          document.addEventListener(eventType, newProps[key])
+          dom.removeEventListener(eventType, oldProps[key])
+          dom.addEventListener(eventType, newProps[key])
         } else {
           dom[key] = newProps[key]
         }
