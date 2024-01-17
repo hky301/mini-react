@@ -7,14 +7,18 @@ import React from './core/React.js';
 // const App = <div id='app'>hi,mini-react <span className='red'></span></div>
 
 // console.log(JSON.stringify(App, null, 2));
-
+let count = 1
+let obj = { id: 'count' }
 function Counter({ num }) {
 
   function changeCounter() {
     console.log('changeCounter');
+    count++
+    obj = {}
+    React.update()
   }
 
-  return <div className='counter'>counter: {num}
+  return <div {...obj} className='counter'>counter: {count}
     <button onClick={changeCounter}>点击</button>
   </div>
 }
