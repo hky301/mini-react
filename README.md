@@ -1,29 +1,11 @@
 # mini-react
 实现 mini-react
 
-## 回顾前三天的内容
+## 第五天
+### 实现事件绑定
+相对比较简单，利用原生的 js 绑定事件，要注意props key 是以 on 开头的
 
-1. 实现最简单的 mini-react
-在页面上显示 "Hello, world!"
+### 实现更新 props
+思考： count变量 写在组件外面，是全局变量，更新时，vdom 树会重新构建，获取到值就是更新过后的值了。如果写在组件里面，构建vdom 时， count 重新初始化了，又回到原来的值，新老 props 值是一样，页面上的数据没有变化。
 
-创建 vdom 对象
-
-vdom 类型有两种：element 类型 和 text 类型, 写两个创建方法
-
-三步骤：创建dom，初始化 props、挂载
-
-api 和 react 保持一致
-
-2. 使用 jsx
-用 vite 创建项目，支持 jsx
-
-3. 实现任务调度器
-dom 非常大时，浏览器会卡顿，原因是什么呢
-分帧的思想
-
-
-4. 实现 fiber 架构
-
-5. 实现统一提交
-6. 实现 function component
-7. 重构 function component
+initChildren 改名 reconcileChildren，reconcile 这个词都没见过，还得多积累点词汇量啊
