@@ -9,13 +9,22 @@ import React from './core/React.js';
 // console.log(JSON.stringify(App, null, 2));
 
 function Counter({ num }) {
-  return <div>counter: {num}</div>
+
+  function changeCounter() {
+    console.log('changeCounter');
+  }
+
+  return <div className='counter'>counter: {num}
+    <button onClick={changeCounter}>点击</button>
+  </div>
 }
 
 function App() {
+
+
   return <div id='app'>hi,mini-react <span className='red'></span>
     <Counter num={10} />
-    <Counter num={20} />
+    {/* <Counter num={20} /> */}
   </div>
 }
 

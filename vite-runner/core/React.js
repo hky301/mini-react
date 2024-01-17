@@ -41,12 +41,21 @@ function createDom(type) {
 function updateProps(dom, props) {
   Object.keys(props).forEach(key => {
     if (key !== 'children') {
-      dom[key] = props[key]
+
+      // key 以 on 开头的代表是事件
+      if (key.startsWith('on')) {
+        const name = key.slice(2).toLowerCase()
+        document.addEventListener(name, props[key])
+      } else {
+        dom[key] = props[key]
+      }
+
     }
   })
 }
 
 function initChildren(fiber, children) {
+  console.log(fiber);
   let prevChild = null
   children.forEach((child, index) => {
 
