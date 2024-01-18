@@ -11,7 +11,7 @@ function Bar() {
   return <div id='bar'>bar</div>
 }
 
-let isShow = true
+let isShow = false
 
 function App() {
 
@@ -26,7 +26,7 @@ function App() {
 
   return <div id='app'>
     <div>hi,mini-react</div>
-    {isShow ? child1 : child2}
+    {isShow && child2}
     <button onClick={change}>切换</button>
   </div>
 }

@@ -101,14 +101,17 @@ function reconcileChildren(fiber, children) {
       }
     } else {
       // 初始化
-      nextFiber = {
-        type: child.type,
-        props: child.props,
-        child: null,
-        sibling: null,
-        parent: fiber,
-        dom: null,
-        effectTag: 'placement'
+      if (child) {
+        nextFiber = {
+          type: child.type,
+          props: child.props,
+          child: null,
+          sibling: null,
+          parent: fiber,
+          dom: null,
+          effectTag: 'placement'
+        }
+
       }
 
       if (oldFiber) {
@@ -128,7 +131,11 @@ function reconcileChildren(fiber, children) {
     } else {
       prevChild.sibling = nextFiber
     }
-    prevChild = nextFiber
+
+    // 能否根据 child 判断，好像也没有问题
+    if (nextFiber) {
+      prevChild = nextFiber
+    }
   })
 
   while (oldFiber) {
