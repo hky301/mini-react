@@ -1,34 +1,33 @@
 
 import React from './core/React.js';
 
-// const App = React.createElementVNode('div', { id: 'app' }, 'hi', 'mini-react', React.createElementVNode('span', { className: 'red' }))
-
-
-// const App = <div id='app'>hi,mini-react <span className='red'></span></div>
-
-// console.log(JSON.stringify(App, null, 2));
-let count = 1
-let obj = { id: 'count' }
-function Counter({ num }) {
-
-  function changeCounter() {
-    console.log('changeCounter');
-    count++
-    obj = {}
-    React.update()
-  }
-
-  return <div {...obj} className='counter'>counter: {count}
-    <button onClick={changeCounter}>点击</button>
+function Foo() {
+  return <div id='foo'>foo
+    <p>aaaa</p>
   </div>
 }
 
+function Bar() {
+  return <div id='bar'>bar</div>
+}
+
+let isShow = true
+
 function App() {
 
+  const child1 = <div>child1<p>1111</p><p>2222</p><p>3333</p></div>
+  const child2 = <div>child2</div>
 
-  return <div id='app'>hi,mini-react <span className='red'></span>
-    <Counter num={10} />
-    {/* <Counter num={20} /> */}
+
+  function change() {
+    isShow = !isShow
+    React.update()
+  }
+
+  return <div id='app'>
+    <div>hi,mini-react</div>
+    {isShow ? child1 : child2}
+    <button onClick={change}>切换</button>
   </div>
 }
 

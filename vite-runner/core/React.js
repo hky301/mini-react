@@ -110,6 +110,12 @@ function reconcileChildren(fiber, children) {
         dom: null,
         effectTag: 'placement'
       }
+
+      if (oldFiber) {
+        console.log('需要删除的节点', oldFiber);
+        deletions.push(oldFiber)
+      }
+
     }
 
     if (oldFiber) {
@@ -124,6 +130,12 @@ function reconcileChildren(fiber, children) {
     }
     prevChild = nextFiber
   })
+
+  while (oldFiber) {
+    console.log(oldFiber);
+    deletions.push(oldFiber)
+    oldFiber = oldFiber.sibling
+  }
 }
 
 // work in progress
@@ -131,6 +143,8 @@ let wipRoot = null
 let nextWorkOfUnit = null
 // 老的 root，下次更新时需要用到
 let currentRoot = null
+// 更新时要删除的节点
+let deletions = []
 
 function updateFunctionComponent(fiber) {
   const children = [fiber.type(fiber.props)]
@@ -190,11 +204,30 @@ function workLoop(deadline) {
   requestIdleCallback(workLoop)
 }
 
+function removeOldFiber(fiber) {
+  if (fiber.dom) {
+    let parentFiber = fiber.parent
+    while (!parentFiber.dom) {
+      parentFiber = parentFiber.parent
+    }
+    parentFiber.dom.removeChild(fiber.dom)
+  } else {
+    removeOldFiber(fiber.child)
+  }
+}
+
 
 function commitRoot() {
+
+  if (deletions.length > 0) {
+    // 删除老的节点
+    deletions.forEach(removeOldFiber)
+  }
+
   commitWork(wipRoot.child)
   currentRoot = wipRoot
   wipRoot = null
+  deletions = []
 }
 
 function commitWork(fiber) {
