@@ -35,12 +35,25 @@ function render(vnode, container) {
 
 // 新的 root
 function update() {
-  wipRoot = {
-    dom: currentRoot.dom,
-    props: currentRoot.props,
-    alternate: currentRoot
+  let currentFiber = wipFiber
+
+  return () => {
+    console.log(currentFiber);
+
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber
+    }
+
+    // wipRoot = {
+    //   dom: currentRoot.dom,
+    //   props: currentRoot.props,
+    //   alternate: currentRoot
+    // }
+    nextWorkOfUnit = wipRoot
   }
-  nextWorkOfUnit = wipRoot
+
+
 }
 
 
@@ -152,8 +165,12 @@ let nextWorkOfUnit = null
 let currentRoot = null
 // 更新时要删除的节点
 let deletions = []
+let wipFiber = null
 
 function updateFunctionComponent(fiber) {
+
+  wipFiber = fiber
+
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
 }
@@ -197,6 +214,12 @@ function workLoop(deadline) {
   while (!shouldYield && nextWorkOfUnit) {
 
     nextWorkOfUnit = performWorkOfUnit(nextWorkOfUnit)
+
+    if (wipRoot?.sibling?.type === nextWorkOfUnit?.type) {
+      console.log('hit');
+      nextWorkOfUnit = undefined
+    }
+
 
     shouldYield = deadline.timeRemaining() < 1
   }

@@ -1,33 +1,52 @@
 
 import React from './core/React.js';
 
+let foo = 1
 function Foo() {
-  return <div id='foo'>foo
-    <p>aaaa</p>
+  console.log('Foo');
+
+  const update = React.update()
+  function handleClick() {
+    foo++
+    update()
+  }
+
+  return <div id='foo'>foo:{foo}
+    <button onClick={handleClick}>点击</button>
   </div>
 }
 
+let bar = 1
 function Bar() {
-  return <div id='bar'>bar</div>
+  console.log('Bar');
+
+  const update = React.update()
+  function handleClick() {
+    bar++
+    update()
+  }
+
+
+  return <div id='bar'>bar:{bar}
+    <button onClick={handleClick}>点击</button></div>
 }
 
-let isShow = false
 
+let currentRoot = 1
 function App() {
-
-  const child1 = <div>child1<p>1111</p><p>2222</p><p>3333</p></div>
-  const child2 = <div>child2</div>
-
-
-  function change() {
-    isShow = !isShow
-    React.update()
+  console.log('app');
+  const update = React.update()
+  function handleClick() {
+    currentRoot++
+    update()
   }
 
   return <div id='app'>
     <div>hi,mini-react</div>
-    {isShow && child2}
-    <button onClick={change}>切换</button>
+    <div>root: {currentRoot}</div>
+    <button onClick={handleClick}>点击</button>
+    <Foo />
+    <Bar />
   </div>
 }
 
