@@ -244,12 +244,6 @@ function commitWork(fiber) {
         if (nextFiber.sibling && nextFiber.sibling.isMounted) {
           anchor = nextFiber.sibling
         }
-        // TODO:如果没有 sibling，还得去找叔叔节点,
-        // 不需要找了，因为是 parent 的子元素。。。。。。
-        // if (!anchor) {
-        //   // TODO: 需要循环 sibling
-        //   anchor = nextFiber.parent.sibling
-        // }
         parentFiber.dom.insertBefore(fiber.dom, anchor ? anchor.dom : null)
       }
     }
