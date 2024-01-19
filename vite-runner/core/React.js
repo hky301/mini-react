@@ -77,7 +77,8 @@ function reconcileChildren(fiber, children) {
         parent: fiber,
         dom: oldFiber.dom,
         effectTag: 'update',
-        alternate: oldFiber
+        alternate: oldFiber,
+        isMounted: oldFiber.isMounted || false
       }
     } else {
       // 初始化
@@ -89,7 +90,8 @@ function reconcileChildren(fiber, children) {
           sibling: null,
           parent: fiber,
           dom: null,
-          effectTag: 'placement'
+          effectTag: 'placement',
+          isMounted: false
         }
       }
 
@@ -210,10 +212,13 @@ function commitRoot() {
   console.log('wipRoot', wipRoot);
   commitWork(wipRoot.child)
   currentRoot = wipRoot
+  console.log(currentRoot);
   wipRoot = null
   deletions = []
+  isMounted = false
 }
 
+let isMounted = true
 function commitWork(fiber) {
   if (!fiber) return
   let parentFiber = fiber.parent
@@ -226,10 +231,27 @@ function commitWork(fiber) {
     updateProps(fiber.dom, fiber.props, fiber.alternate.props)
   } else if (fiber.effectTag === 'placement') {
     if (fiber.dom) {
-      // insertBefore
-      // parentFiber.dom.insertBefore(fiber.dom, fiber.sibling?.dom || null)
       // TODO:
-      parentFiber.dom.append(fiber.dom)
+      if (isMounted) {
+        fiber.isMounted = true
+        parentFiber.dom.append(fiber.dom)
+      } else {
+        let anchor = null
+        let nextFiber = fiber
+        while (nextFiber.sibling && !nextFiber.sibling.isMounted) {
+          nextFiber = nextFiber.sibling
+        }
+        if (nextFiber.sibling && nextFiber.sibling.isMounted) {
+          anchor = nextFiber.sibling
+        }
+        // TODO:如果没有 sibling，还得去找叔叔节点,
+        // 不需要找了，因为是 parent 的子元素。。。。。。
+        // if (!anchor) {
+        //   // TODO: 需要循环 sibling
+        //   anchor = nextFiber.parent.sibling
+        // }
+        parentFiber.dom.insertBefore(fiber.dom, anchor ? anchor.dom : null)
+      }
     }
   }
 
