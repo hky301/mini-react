@@ -23,39 +23,6 @@ function createTextVNode(nodeValue) {
   }
 }
 
-function render(vnode, container) {
-  wipRoot = {
-    dom: container,
-    props: {
-      children: [vnode]
-    }
-  }
-  nextWorkOfUnit = wipRoot
-}
-
-// 新的 root
-function update() {
-  let currentFiber = wipFiber
-
-  return () => {
-    console.log(currentFiber);
-
-    wipRoot = {
-      ...currentFiber,
-      alternate: currentFiber
-    }
-
-    // wipRoot = {
-    //   dom: currentRoot.dom,
-    //   props: currentRoot.props,
-    //   alternate: currentRoot
-    // }
-    nextWorkOfUnit = wipRoot
-  }
-
-
-}
-
 
 function createDom(type) {
   return type === TEXT_ELEMENT ? document.createTextNode('') : document.createElement(type)
@@ -124,20 +91,17 @@ function reconcileChildren(fiber, children) {
           dom: null,
           effectTag: 'placement'
         }
-
       }
 
       if (oldFiber) {
-        console.log('需要删除的节点', oldFiber);
+        // console.log('需要删除的节点', oldFiber);
         deletions.push(oldFiber)
       }
-
     }
 
     if (oldFiber) {
       oldFiber = oldFiber.sibling
     }
-
 
     if (index === 0) {
       fiber.child = nextFiber
@@ -152,7 +116,7 @@ function reconcileChildren(fiber, children) {
   })
 
   while (oldFiber) {
-    console.log(oldFiber);
+    // console.log(oldFiber);
     deletions.push(oldFiber)
     oldFiber = oldFiber.sibling
   }
@@ -168,7 +132,8 @@ let deletions = []
 let wipFiber = null
 
 function updateFunctionComponent(fiber) {
-
+  stateHooks = []
+  stateHookIndex = 0
   wipFiber = fiber
 
   const children = [fiber.type(fiber.props)]
@@ -203,24 +168,16 @@ function performWorkOfUnit(fiber) {
 
     nextFiber = nextFiber.parent
   }
-
 }
 
-
 function workLoop(deadline) {
-
   let shouldYield = false
-
   while (!shouldYield && nextWorkOfUnit) {
-
     nextWorkOfUnit = performWorkOfUnit(nextWorkOfUnit)
-
     if (wipRoot?.sibling?.type === nextWorkOfUnit?.type) {
-      console.log('hit');
+      // console.log('hit');
       nextWorkOfUnit = undefined
     }
-
-
     shouldYield = deadline.timeRemaining() < 1
   }
 
@@ -229,8 +186,6 @@ function workLoop(deadline) {
     // console.log(root);
     commitRoot()
   }
-
-
   requestIdleCallback(workLoop)
 }
 
@@ -246,14 +201,13 @@ function removeOldFiber(fiber) {
   }
 }
 
-
 function commitRoot() {
 
   if (deletions.length > 0) {
     // 删除老的节点
     deletions.forEach(removeOldFiber)
   }
-
+  console.log('wipRoot', wipRoot);
   commitWork(wipRoot.child)
   currentRoot = wipRoot
   wipRoot = null
@@ -272,6 +226,9 @@ function commitWork(fiber) {
     updateProps(fiber.dom, fiber.props, fiber.alternate.props)
   } else if (fiber.effectTag === 'placement') {
     if (fiber.dom) {
+      // insertBefore
+      // parentFiber.dom.insertBefore(fiber.dom, fiber.sibling?.dom || null)
+      // TODO:
       parentFiber.dom.append(fiber.dom)
     }
   }
@@ -280,13 +237,83 @@ function commitWork(fiber) {
   commitWork(fiber.sibling)
 }
 
-
 requestIdleCallback(workLoop)
 
+function render(vnode, container) {
+  wipRoot = {
+    dom: container,
+    props: {
+      children: [vnode]
+    }
+  }
+  nextWorkOfUnit = wipRoot
+}
 
+// 更新，新的 root
+function update() {
+  let currentFiber = wipFiber
+
+  return () => {
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber
+    }
+    nextWorkOfUnit = wipRoot
+  }
+}
+
+let stateHooks
+let stateHookIndex
+
+function isObject(value) {
+  return typeof value === 'object' && value !== null
+}
+
+function useState(initial) {
+  // initial 类型可能是number、string、boolean、arr、object
+
+  let currentFiber = wipFiber
+  const oldHook = currentFiber.alternate?.stateHooks[stateHookIndex]
+
+  const stateHook = {
+    state: oldHook ? oldHook.state : initial,
+    queue: oldHook ? oldHook.queue : []
+  }
+
+  stateHook.queue.forEach(action => {
+    stateHook.state = action(stateHook.state)
+  })
+
+  stateHook.queue = []
+
+  stateHookIndex++
+  stateHooks.push(stateHook)
+  currentFiber.stateHooks = stateHooks
+
+  function setState(action) {
+
+    const eagerState = typeof action === 'function' ? action(stateHook.state) : action
+    if (isObject(eagerState)) {
+      if (JSON.stringify(eagerState) === JSON.stringify(stateHook.state)) return
+    } else {
+      if (eagerState === stateHook.state) return
+    }
+
+    stateHook.queue.push(typeof action === 'function' ? action : () => action)
+
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber
+    }
+    nextWorkOfUnit = wipRoot
+  }
+
+  return [stateHook.state, setState]
+}
 
 
 const React = {
+  useState,
   update,
   render,
   createElement
