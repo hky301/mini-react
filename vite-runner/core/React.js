@@ -214,7 +214,6 @@ function commitRoot() {
   commitWork(wipRoot.child)
   commitEffect()
   currentRoot = wipRoot
-  // console.log(currentRoot);
   wipRoot = null
   deletions = []
   isMounted = false
@@ -233,7 +232,7 @@ function commitWork(fiber) {
     updateProps(fiber.dom, fiber.props, fiber.alternate.props)
   } else if (fiber.effectTag === 'placement') {
     if (fiber.dom) {
-      // TODO:
+      // parentFiber.dom.append(fiber.dom)
       if (isMounted) {
         fiber.isMounted = true
         parentFiber.dom.append(fiber.dom)
@@ -315,10 +314,12 @@ function update() {
   let currentFiber = wipFiber
 
   return () => {
-    wipRoot = {
-      ...currentFiber,
-      alternate: currentFiber
-    }
+    wipRoot = currentFiber
+    wipFiber.alternate = currentFiber
+    // wipRoot = {
+    //   ...currentFiber,
+    //   alternate: currentFiber
+    // }
     nextWorkOfUnit = wipRoot
   }
 }

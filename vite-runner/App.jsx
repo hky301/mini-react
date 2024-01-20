@@ -48,11 +48,12 @@ import React from './core/React.js';
 
 // function App() {
 //   // console.log('app');
+//   const [isShow, setIsShow] = React.useState(true)
 
 //   const update = React.update()
 //   function handleClick() {
-//     currentRoot++
-//     isShow = !isShow
+//     // currentRoot++
+//     setIsShow(!isShow)
 //     update()
 //   }
 
@@ -62,20 +63,19 @@ import React from './core/React.js';
 //   const child6 = <p id='child6'>child6</p>
 
 //   return <div id='app'>
-//     {/* <div>hi,mini-react</div> */}
-//     {/* <div>root: {currentRoot}</div> */}
-//     {/* TODO:切换显示，child 会到dom最后面，估计fiber结构变了, 原因是 child2 重新创建了， effectTag: 'placement'，parent append 上去的 ,*/}
 //     hello world
-//     <div id='child'>
-//       {isShow ? child3 : child4}
-//       {isShow ? child5 : child6}
-//     </div>
+//     {isShow ? child3 : child4}
+//     {isShow ? child5 : child6}
 
 //     <button onClick={handleClick}>点击</button>
 //     {/* <Foo /> */}
 //     {/* <Bar /> */}
+//     {isShow ? child5 : child6}
 //   </div>
 // }
+
+// {/* TODO:切换显示，child 会到dom最后面，估计fiber结构变了, 原因是 child2 重新创建了， effectTag: 'placement'，parent append 上去的 ,*/ }
+
 
 
 // TODO:事件有 bug
@@ -136,6 +136,36 @@ import React from './core/React.js';
 
 // }
 
+
+function Foo() {
+  const [count, setCount] = React.useState(1)
+
+  function handleClick() {
+    setCount((c) => c + 1)
+  }
+
+
+  return <div id='foo'>
+    <div>foo: {count}</div>
+    <button onClick={handleClick}>点击</button>
+  </div>
+}
+
+
+function Bar() {
+  const [count, setCount] = React.useState(1)
+
+  function handleClick() {
+    setCount((c) => c + 1)
+  }
+
+
+  return <div id='bar'>
+    <div>bar: {count}</div>
+    <button onClick={handleClick}>点击</button>
+  </div>
+}
+
 function App() {
   const [count, setCount] = React.useState(1)
 
@@ -143,32 +173,34 @@ function App() {
     setCount((c) => c + 1)
   }
 
-  React.useEffect(() => {
-    console.log('init app');
-    return () => {
-      console.log('clean 0');
-    }
-  }, [])
+  // React.useEffect(() => {
+  //   console.log('init app');
+  //   return () => {
+  //     console.log('clean 0');
+  //   }
+  // }, [])
 
-  React.useEffect(() => {
-    console.log('update app1');
-    // setCount((c) => c + 1)
-    return () => {
-      console.log('clean 1');
-    }
-  }, [count])
+  // React.useEffect(() => {
+  //   console.log('update app1');
+  //   // setCount((c) => c + 1)
+  //   return () => {
+  //     console.log('clean 1');
+  //   }
+  // }, [count])
 
-  React.useEffect(() => {
-    console.log('update app2');
-    return () => {
-      console.log('clean 2');
-    }
-  }, [count])
+  // React.useEffect(() => {
+  //   console.log('update app2');
+  //   return () => {
+  //     console.log('clean 2');
+  //   }
+  // }, [count])
 
 
   return <div id='app'>
-    <div>{count}</div>
+    <div>app: {count}</div>
     <button onClick={handleClick}>点击</button>
+    <Foo />
+    <Bar />
   </div>
 }
 
