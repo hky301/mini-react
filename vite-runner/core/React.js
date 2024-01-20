@@ -136,6 +136,7 @@ let wipFiber = null
 function updateFunctionComponent(fiber) {
   stateHooks = []
   stateHookIndex = 0
+  effectHooks = []
   wipFiber = fiber
 
   const children = [fiber.type(fiber.props)]
@@ -211,8 +212,9 @@ function commitRoot() {
   }
   console.log('wipRoot', wipRoot);
   commitWork(wipRoot.child)
+  commitEffect()
   currentRoot = wipRoot
-  console.log(currentRoot);
+  // console.log(currentRoot);
   wipRoot = null
   deletions = []
   isMounted = false
@@ -251,6 +253,49 @@ function commitWork(fiber) {
 
   commitWork(fiber.child)
   commitWork(fiber.sibling)
+}
+
+function commitEffect() {
+
+  function run(fiber) {
+    if (!fiber) return
+
+    if (!fiber.alternate) {
+      // 初始化
+      fiber.effectHooks?.forEach(effectHook => {
+        effectHook.cleanup = effectHook.callback()
+      })
+    } else {
+      // 更新
+      fiber.effectHooks?.forEach((newHook, index) => {
+        if (newHook.deps.length === 0) return
+        const oldEffectHook = fiber.alternate?.effectHooks[index]
+
+        const needUpdate = oldEffectHook?.deps.some((oldDep, i) => {
+          return oldDep !== newHook.deps[i]
+        })
+        needUpdate && (newHook.cleanup = newHook?.callback())
+      })
+    }
+
+    run(fiber.child)
+    run(fiber.sibling)
+  }
+
+
+  function runCleanup(fiber) {
+    if (!fiber) return
+    fiber.alternate?.effectHooks?.forEach((hook) => {
+      if (hook.deps.length === 0) return
+      hook.cleanup && hook.cleanup()
+    })
+    runCleanup(fiber.child)
+    runCleanup(fiber.sibling)
+  }
+
+  runCleanup(wipRoot)
+  run(wipRoot)
+
 }
 
 requestIdleCallback(workLoop)
@@ -327,9 +372,24 @@ function useState(initial) {
   return [stateHook.state, setState]
 }
 
+let effectHooks
+function useEffect(callback, deps) {
+  // console.log(wipFiber);
+  // if (!wipFiber.effectHooks) {
+  const effectHook = {
+    callback,
+    deps
+  }
+  effectHooks.push(effectHook)
+  wipFiber.effectHooks = effectHooks
+  // }
+
+}
+
 
 const React = {
   useState,
+  useEffect,
   update,
   render,
   createElement
